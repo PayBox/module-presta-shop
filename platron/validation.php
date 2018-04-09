@@ -17,8 +17,8 @@ if(empty($arrRequest['pg_sig']) || !PG_Signature::check($arrRequest['pg_sig'], '
 }
 else {
 	$platron->validateOrder((int)($secure_cart[0]), Configuration::get('PS_OS_BANKWIRE'), (float)($arrRequest['pg_amount']), $platron->displayName, 'Wait for pay', array(), NULL, false, $customer->secure_key);
-	
-	echo "<form action='https://paybox.kz/payment.php' method='POST' id='platron_payment_form'>";
+
+	echo "<form action='https://api.paybox.money/payment.php' method='POST' id='platron_payment_form'>";
 	foreach ($_POST as $key => $field)
 	{
 		echo "<input type='hidden' value='$field' name='$key'>";

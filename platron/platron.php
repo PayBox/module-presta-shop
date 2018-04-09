@@ -12,15 +12,15 @@ class platron extends PaymentModule
 
     public function __construct()
     {
-        $this->name = 'platron';        
+        $this->name = 'platron';
         $this->tab = 'Payment';
         $this->version = 1.0;
         $this->author = 'Platron';
-        
+
         $this->currencies = true;
         $this->currencies_mode = 'radio';
-        
-        $config = Configuration::getMultiple(array('PL_MERCHANT_ID', 'PL_SECRET_KEY', 'PL_LIFETIME', 'PL_TESTMODE'));    
+
+        $config = Configuration::getMultiple(array('PL_MERCHANT_ID', 'PL_SECRET_KEY', 'PL_LIFETIME', 'PL_TESTMODE'));
         if (isset($config['PL_MERCHANT_ID']))
             $this->pl_merchant_id = $config['PL_MERCHANT_ID'];
         if (isset($config['PL_SECRET_KEY']))
@@ -29,39 +29,39 @@ class platron extends PaymentModule
             $this->pl_lifetime = $config['PL_LIFETIME'];
         if (isset($config['PL_TESTMODE']))
             $this->pl_testmode = $config['PL_TESTMODE'];
-            
+
         parent::__construct();
-        
+
         /* The parent construct is required for translations */
         $this->page = basename(__FILE__, '.php');
         $this->displayName = 'PayBox';
         $this->description = $this->l('Accept payments with PayBox');
         $this->confirmUninstall = $this->l('Are you sure you want to delete your details ?');
-    }        
+    }
 
     public function install()
-    {        
+    {
         if (!parent::install() OR !$this->registerHook('payment') OR !$this->registerHook('paymentReturn'))
             return false;
-        
+
         Configuration::updateValue('PL_MERCHANT_ID', '');
         Configuration::updateValue('PL_SECRET_KEY', '');
         Configuration::updateValue('PL_LIFETIME', '');
         Configuration::updateValue('PL_TESTMODE', '1');
-        
+
         return true;
     }
-    
+
     public function uninstall()
     {
         Configuration::deleteByName('PL_MERCHANT_ID');
         Configuration::deleteByName('PL_SECRET_KEY');
         Configuration::deleteByName('PL_LIFETIME');
         Configuration::deleteByName('PL_TESTMODE');
-        
+
         parent::uninstall();
     }
-    
+
     private function _postValidation()
     {
         if (isset($_POST['btnSubmit']))
@@ -79,7 +79,7 @@ class platron extends PaymentModule
         {
             if(!isset($_POST['pl_testmode']))
                 $_POST['pl_testmode'] = 0;
-            
+
             Configuration::updateValue('PL_MERCHANT_ID', $_POST['pl_merchant_id']);
             Configuration::updateValue('PL_SECRET_KEY', $_POST['pl_secret_key']);
             Configuration::updateValue('PL_LIFETIME', $_POST['pl_lifetime']);
@@ -87,20 +87,20 @@ class platron extends PaymentModule
         }
         $this->_html .= '<div class="conf confirm"><img src="../img/admin/ok.gif" alt="'.$this->l('OK').'" /> '.$this->l('Settings updated').'</div>';
     }
-    
+
     private function _displayRb()
     {
         $this->_html .= '<img src="../modules/platron/paybox.png" style="float:left; margin-right:15px;"><b>'.$this->l('This module allows you to accept payments by PayBox.').'</b><br /><br />
-        '.$this->l('You need to register on the site').' <a href="https://paybox.kz/join.php" target="blank">paybox.kz</a> <br /><br /><br />';
+        '.$this->l('You need to register on the site').' <a href="https://paybox.money" target="blank">paybox.money</a> <br /><br /><br />';
     }
-    
+
     private function _displayForm()
     {
-        $bTestMode = htmlentities(Tools::getValue('pl_testmode', $this->pl_testmode), ENT_COMPAT, 'UTF-8');     
+        $bTestMode = htmlentities(Tools::getValue('pl_testmode', $this->pl_testmode), ENT_COMPAT, 'UTF-8');
         $checked = '';
         if($bTestMode)
             $checked = 'checked="checked"';
-        
+
         $this->_html .=
         '<form action="'.$_SERVER['REQUEST_URI'].'" method="post">
             <fieldset>
@@ -142,7 +142,7 @@ class platron extends PaymentModule
 
         return $this->_html;
     }
-    
+
     public function hookPayment($params)
     {
         global $smarty;
@@ -150,7 +150,7 @@ class platron extends PaymentModule
         $cookie = $this->context->cookie;
         $customer = new Customer((int)$cookie->id_customer);
         $nTotalPrice = $params['cart']->getOrderTotal(true, 3);
-        
+
         $arrOrderItems = $params['cart']->getProducts();
         foreach($arrOrderItems as $arrItem){
             $strDescription .= $arrItem['name'];
@@ -160,10 +160,10 @@ class platron extends PaymentModule
                 $strDescription .= "*".$arrItem['cart_quantity'];
             $strDescription .= "; ";
         }
-        
+
         $objLang = new LanguageCore($cookie->id_lang);
         $strRequestUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/modules/platron/callback.php';
-        
+
         $arrFields = array(
             'pg_merchant_id'        => $this->pl_merchant_id,
             'pg_order_id'           => $params['cart']->id,
@@ -185,12 +185,12 @@ class platron extends PaymentModule
             'pg_user_contact_email' => $cookie->email,
         );
         $arrFields['pg_sig'] = PG_Signature::make('payment.php', $arrFields, $this->pl_secret_key);
-        
+
         $smarty->assign('arrFields', $arrFields);
 
         return $this->display(__FILE__, 'platron.tpl');
     }
-    
+
     public function getL($key)
     {
         $translations = array(
@@ -207,7 +207,7 @@ class platron extends PaymentModule
 
         return $this->display(__FILE__, 'confirmation.tpl');
     }
-    
+
 }
 
 ?>
